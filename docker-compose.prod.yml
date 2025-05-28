@@ -1,0 +1,80 @@
+version: "3.9"
+services:
+  postgres:
+    container_name: antifraud-postgres
+    image: postgres:17.5-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  zookeeper:
+    container_name: zookeeper
+    image: confluentinc/cp-zookeeper:5.5.3
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - app-network
+  kafka:
+    container_name: kafka
+    image: confluentinc/cp-enterprise-kafka:5.5.3
+    depends_on: [ zookeeper ]
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9991
+    ports:
+      - 9092:9092
+    networks:
+      - app-network
+
+  api-transaction:
+    container_name: api-transaction
+    build:
+      context: ./api-transaction
+      dockerfile: Dockerfile.prod
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - app-network
+
+  ms-antifraud:
+    container_name: ms-antifraud
+    build:
+      context: ./ms-antifraud
+      dockerfile: Dockerfile.prod
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - kafka
+    networks:
+      - app-network
+
+  k6:
+    image: grafana/k6
+    container_name: antifraud-k6
+    working_dir: /k6
+    env_file:
+      - .env
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

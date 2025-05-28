@@ -1,0 +1,10 @@
+{
+	"name": "Api Transaction DevContainer",
+	"dockerComposeFile": "../../docker-compose.local.yml",
+	"service": "api-transaction",
+	"workspaceFolder": "/workspace/api-transaction",
+	"remoteUser": "root",
+	"mounts": [
+		"source=${localWorkspaceFolder}/api-transaction,target=/workspace/api-transaction,type=bind"
+	]
+}

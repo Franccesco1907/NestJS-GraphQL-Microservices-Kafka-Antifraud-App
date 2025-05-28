@@ -1,0 +1,10 @@
+{
+	"name": "Antifraud Microservice DevContainer",
+	"dockerComposeFile": "../../docker-compose.local.yml",
+	"service": "ms-antifraud",
+	"workspaceFolder": "/workspace/ms-antifraud",
+	"remoteUser": "root",
+	"mounts": [
+		"source=${localWorkspaceFolder}/ms-antifraud,target=/workspace/ms-antifraud,type=bind"
+	]
+}
